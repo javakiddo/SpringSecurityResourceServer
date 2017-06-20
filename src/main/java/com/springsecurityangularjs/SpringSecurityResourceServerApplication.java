@@ -4,49 +4,55 @@ import java.util.UUID;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.session.web.http.HeaderHttpSessionStrategy;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
-public class SpringSecurityResourceServerApplication
-{
-	
+public class SpringSecurityResourceServerApplication extends WebSecurityConfigurerAdapter {
+
 	@RequestMapping("/")
-	@CrossOrigin(origins="*", maxAge=3600)
-	public Message home()
-	{
+	@CrossOrigin(origins = "*", maxAge = 3600, allowedHeaders = { "x-auth-token", "x-requested-with" })
+	public Message home() {
 		return new Message("Hello World");
 	}
-	
-	public static void main(String[] args)
-	{
-		SpringApplication.run(SpringSecurityResourceServerApplication.class, args);
-		
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.cors().and().authorizeRequests().anyRequest().authenticated();
 	}
-	
-	class Message
-	{
+
+	public static void main(String[] args) {
+		SpringApplication.run(SpringSecurityResourceServerApplication.class, args);
+
+	}
+
+	@Bean
+	HeaderHttpSessionStrategy sessionStrategy() {
+		return new HeaderHttpSessionStrategy();
+	}
+
+	class Message {
 		private String id = UUID.randomUUID().toString();
 		private String content;
-		
-		Message()
-		{
+
+		Message() {
 		}
-		
-		public Message(String content)
-		{
+
+		public Message(String content) {
 			this.content = content;
 		}
-		
-		public String getId()
-		{
+
+		public String getId() {
 			return id;
 		}
-		
-		public String getContent()
-		{
+
+		public String getContent() {
 			return content;
 		}
 	}
